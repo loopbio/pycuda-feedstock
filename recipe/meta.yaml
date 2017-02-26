@@ -1,0 +1,89 @@
+# Find our git repo: https://github.com/loopbio/pycuda-feedstock
+#
+# Originally from Klöckner himself at:
+#   https://github.com/conda-forge/staged-recipes/pull/1775
+# This essentially removes the dependency on the cuda runtime
+# and replaces it for a dependency on the env providing the cuda80 feature.
+
+{% set name = "pycuda" %}
+{% set version = "2016.1.2" %}
+{% set sha256 = "a7dbdac7e2f0c0d2ad98f5f281d5a9d29d6673b3c20210e261b96e9a2d0b6e37" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  fn: {{ name }}-{{ version }}.tar.gz
+  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
+  sha256: {{ sha256 }}
+
+build:
+  number: 0
+  features:
+    - cuda80
+  script:
+    - python configure.py --cuda-root=/usr/local/cuda/  # it would work magically anyway
+    - python setup.py install --single-version-externally-managed --record record.txt
+
+    # N.B. test right after build (incl. nasty LD_LIBRARY intervention).
+    # Nastily disabled because a few do not pass (and I'm in a hurry):
+    #   - AttributeError, seems to me these are fixed upstream already,
+    #     update to an unreleased commit if needed
+    #   - Too large numeric errors: am I using a too recent driver / card
+    #     combo?
+    # - LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/nvidia/lib64 py.test test/
+
+    # Remove testing cruft
+    # - rm -Rf ${SP_DIR}/py
+    # - rm -Rf ${SP_DIR}/pytest_cov
+
+
+requirements:
+  build:
+    # actual build dependencies
+    - python
+    - setuptools
+    - numpy
+
+    # as we run the tests right after building, we need pytest and runtimes
+    # move this to the test phase whenever is possible
+    # Uncomment this when reenabling the tests
+    # - pytest
+    # - pytools
+    # - six
+    # - mako
+    # - appdirs
+  run:
+    - python
+    - numpy
+    - pytools
+    - six
+    - mako
+    - appdirs
+
+test:
+  requires:
+    - cuda80-feature
+  imports:
+    - {{ name }}
+  # There's not going to be CUDA hw on the CIs, so no way to test.
+
+about:
+  home: http://pypi.python.org/pypi/pycuda
+  doc_url: https://documen.tician.de/pycuda
+  dev_url: http://github.com/inducer/pycuda
+  license: MIT
+  license_file: doc/source/misc.rst
+  # Can start using 'LICENSE' from next version
+  summary: Python wrapper for CUDA
+  description: |
+    PyCUDA lets you access GPUs from Python, through the CUDA parallel
+    compute interface.
+
+extra:
+  recipe-maintainers:
+    - inducer (original)
+    - sdvillal (loopbion changes)
+
+# TODO: this recipe is in a lamentable, quick and dirty state

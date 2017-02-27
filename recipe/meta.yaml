@@ -67,7 +67,6 @@ test:
     - cuda80-feature
   imports:
     - {{ name }}
-  # There's not going to be CUDA hw on the CIs, so no way to test.
 
 about:
   home: http://pypi.python.org/pypi/pycuda

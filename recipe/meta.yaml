@@ -3,11 +3,13 @@
 # Originally from Klöckner himself at:
 #   https://github.com/conda-forge/staged-recipes/pull/1775
 # This essentially removes the dependency on the cuda runtime
-# and replaces it for a dependency on the env providing the cuda80 feature.
+# If we ever have a CUDA package we should make this depend on it.
 
 {% set name = "pycuda" %}
 {% set version = "2016.1.2" %}
 {% set sha256 = "a7dbdac7e2f0c0d2ad98f5f281d5a9d29d6673b3c20210e261b96e9a2d0b6e37" %}
+
+{% set cuda_version = "8.0" %}
 
 package:
   name: {{ name|lower }}
@@ -19,41 +21,19 @@ source:
   sha256: {{ sha256 }}
 
 build:
-  number: 0
-  features:
-    - cuda80
+  number: 1
   script:
     - python configure.py --cuda-root=/usr/local/cuda/  # it would work magically anyway
     - python setup.py install --single-version-externally-managed --record record.txt
-
-    # N.B. test right after build (incl. nasty LD_LIBRARY intervention).
-    # Nastily disabled because a few do not pass (and I'm in a hurry):
-    #   - AttributeError, seems to me these are fixed upstream already,
-    #     update to an unreleased commit if needed
-    #   - Too large numeric errors: am I using a too recent driver / card
-    #     combo?
-    # - LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/nvidia/lib64 py.test test/
-
-    # Remove testing cruft
-    # - rm -Rf ${SP_DIR}/py
-    # - rm -Rf ${SP_DIR}/pytest_cov
-
+  features:
+    - cuda{{ cuda_version }}
+    - cuda{{ cuda_version }}_dev  # no feature deps. in conda
 
 requirements:
   build:
-    # actual build dependencies
     - python
     - setuptools
     - numpy
-
-    # as we run the tests right after building, we need pytest and runtimes
-    # move this to the test phase whenever is possible
-    # Uncomment this when reenabling the tests
-    # - pytest
-    # - pytools
-    # - six
-    # - mako
-    # - appdirs
   run:
     - python
     - numpy
@@ -63,10 +43,25 @@ requirements:
     - appdirs
 
 test:
+  source_files:
+    - test
   requires:
-    - cuda80-feature
+    - cuda-dev-feature {{ cuda_version }}
+    # Uncomment this when reenabling the tests
+    - pytest
+    - pytools
+    - six
+    - mako
+    - appdirs
   imports:
     - {{ name }}
+  commands:
+    # Nastily disabled because three tests fail with CUDA 8 / Pascal.
+    #   1- AttributeError: type object 'compute_mode' has no attribute 'EXCLUSIVE'
+    #     Fixed upstream already: https://github.com/inducer/pycuda/issues/127
+    #   2- Too large numeric errors (but still very small).
+    #     I believe these are tests that need to be fixed to work on newer SW/HW.
+    # - py.test test/
 
 about:
   home: http://pypi.python.org/pypi/pycuda
@@ -84,5 +79,3 @@ extra:
   recipe-maintainers:
     - inducer (original)
     - sdvillal (loopbion changes)
-
-# TODO: this recipe is in a lamentable, quick and dirty state

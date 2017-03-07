@@ -1,9 +1,12 @@
-# Find our git repo: https://github.com/loopbio/pycuda-feedstock
+
 #
 # Originally from Klöckner himself at:
 #   https://github.com/conda-forge/staged-recipes/pull/1775
-# This essentially removes the dependency on the cuda runtime
-# If we ever have a CUDA package we should make this depend on it.
+# This essentially swaps the dependency on the cuda toolkit to a conda feature.
+# Also enables tests.
+#
+# This is needed by neon.
+#
 
 {% set name = "pycuda" %}
 {% set version = "2016.1.2" %}
@@ -21,22 +24,23 @@ source:
   sha256: {{ sha256 }}
 
 build:
-  number: 1
+  number: 3
+  skip: true  # [not linux]
   script:
     - python configure.py --cuda-root=/usr/local/cuda/  # it would work magically anyway
     - python setup.py install --single-version-externally-managed --record record.txt
   features:
     - cuda{{ cuda_version }}
-    - cuda{{ cuda_version }}_dev  # no feature deps. in conda
+    - cuda{{ cuda_version }}dev  # no feature deps. in conda
 
 requirements:
   build:
     - python
     - setuptools
-    - numpy
+    - numpy x.x
   run:
     - python
-    - numpy
+    - numpy x.x
     - pytools
     - six
     - mako
@@ -47,7 +51,7 @@ test:
     - test
   requires:
     - cuda-dev-feature {{ cuda_version }}
-    # Uncomment this when reenabling the tests
+    - cuda-feature {{ cuda_version }}  # N.B. remove when cuda-dev-feature is able to track 2 features
     - pytest
     - pytools
     - six
@@ -56,7 +60,7 @@ test:
   imports:
     - {{ name }}
   commands:
-    # Nastily disabled because three tests fail with CUDA 8 / Pascal.
+    # Nastily disabled because three tests fail with CUDA 8 / 1060.
     #   1- AttributeError: type object 'compute_mode' has no attribute 'EXCLUSIVE'
     #     Fixed upstream already: https://github.com/inducer/pycuda/issues/127
     #   2- Too large numeric errors (but still very small).
@@ -76,6 +80,7 @@ about:
     compute interface.
 
 extra:
+  recipe-url: https://github.com/loopbio/pycuda-feedstock
   recipe-maintainers:
     - inducer (original)
     - sdvillal (loopbion changes)

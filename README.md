@@ -17,8 +17,8 @@ Current build status
 ====================
 
 Linux: [![Circle CI](https://circleci.com/gh/loopbio/pycuda-feedstock.svg?style=shield)](https://circleci.com/gh/loopbio/pycuda-feedstock)
-OSX: [![TravisCI](https://travis-ci.org/loopbio/pycuda-feedstock.svg?branch=master)](https://travis-ci.org/loopbio/pycuda-feedstock)
-Windows: [![AppVeyor](https://ci.appveyor.com/api/projects/status/github/loopbio/pycuda-feedstock?svg=True)](https://ci.appveyor.com/project/loopbio/pycuda-feedstock/branch/master)
+OSX: ![](https://cdn.rawgit.com/conda-forge/conda-smithy/90845bba35bec53edac7a16638aa4d77217a3713/conda_smithy/static/disabled.svg)
+Windows: ![](https://cdn.rawgit.com/conda-forge/conda-smithy/90845bba35bec53edac7a16638aa4d77217a3713/conda_smithy/static/disabled.svg)
 
 Current release info
 ====================
